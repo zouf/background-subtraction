@@ -293,6 +293,8 @@ int main(int argc,char * argv[])
 	//Step 2: Modelling each pixel with Gaussian
 	duration1 = static_cast<double>(cv::getTickCount());
 	bin_img = cv::Mat(orig_img.rows,orig_img.cols,CV_8UC1,cv::Scalar(0));
+
+  //for each frame
 	while(1)
 	{
 
@@ -305,22 +307,26 @@ int main(int argc,char * argv[])
 		}
 			//break;
 		int count = 0;
-		//int count1 = 0;
-		//cv::resize(orig_img,orig_img,cv::Size(340,260));
-		//cv::Mat result(bin_img.size(),CV_8U,cv::Scalar(255));
+	/*	int count1 = 0;
+		cv::resize(orig_img,orig_img,cv::Size(340,260));
+		cv::Mat result(bin_img.size(),CV_8U,cv::Scalar(255));
 
-		//cv::cvtColor(orig_img, orig_img, CV_BGR2YCrCb);
-		//cv::GaussianBlur(orig_img, orig_img, cv::Size(3,3), 3.0);
+		cv::cvtColor(orig_img, orig_img, CV_BGR2YCrCb);
+		cv::GaussianBlur(orig_img, orig_img, cv::Size(3,3), 3.0);
 
-		//cv::cvtColor(bin_img, bin_img, CV_RGB2GRAY);
-
+		cv::cvtColor(bin_img, bin_img, CV_RGB2GRAY);
+*/
 		N_ptr = N_start;
-		std::cout << N_ptr << std::endl;
     duration = static_cast<double>(cv::getTickCount());
+    if (nL != 1)
+      printf ("NL IS %d\n", nL);
+    //number of "rows"
 		for( i=0; i<nL; i++)
 		{
 			r_ptr = orig_img.ptr(i);
 			b_ptr = bin_img.ptr(i);
+      printf ("NC IS %d\n", nC);
+
 			for( j=0; j<nC; j+=3)
 			{
 				sum = 0.0;
@@ -332,6 +338,8 @@ int main(int argc,char * argv[])
 				rVal = *(r_ptr++);
 				gVal = *(r_ptr++);
 				bVal = *(r_ptr++);
+
+        //Frame's start & last pixel???
 				start = N_ptr->pixel_s;
 				rear = N_ptr->pixel_r;
 				ptr = start;
@@ -343,7 +351,10 @@ int main(int argc,char * argv[])
 					Delete_gaussian(rear);
 					N_ptr->no_of_components--;
 				}
-
+//        if (N_ptr->no_of_components > 2)
+//          printf("No of components %d\n", N_ptr->no_of_components);
+//
+//      for each component (either 1,2,3,4)
 				for( k=0; k<N_ptr->no_of_components; k++ )
 				{
 
@@ -351,7 +362,9 @@ int main(int argc,char * argv[])
 					weight = ptr->weight;
 					mult = alpha/weight;
 					weight = weight*alpha_bar + prune;
-					if(close == false)
+					//SB
+          // if it *was* in the background (i.e. not close)
+          if(close == false)
 					{
 						muR = ptr->mean[0];
 						muG = ptr->mean[1];
@@ -392,25 +405,33 @@ int main(int argc,char * argv[])
 
 					}
 
+          //SB
+          //if the models sucks, throw it out
 					if(weight < -prune)
 					{
 						ptr = Delete_gaussian(ptr);
 						weight = 0;
 						N_ptr->no_of_components--;
 					}
-					else
+					else //otherwise add the weight to this model
 					{
 					//if(ptr->weight > 0)
 						sum += weight;
 						ptr->weight = weight;
 					}
-
+          //go to next model
 					ptr = ptr->Next;
 				}
 
+        // all *no_components* for this pixel have been populated.
+        // the "E" step
+        // now do the "M"
 
 
-				if( close == false )
+				// if all of the models thought this pixel was in the background,
+        // start a new model that might get thrown out, but will hopefully
+        // have some likelihood of being in the foreground
+        if( close == false )
 				{
 					ptr = new gaussian;
 					ptr->weight = alpha;
@@ -435,12 +456,16 @@ int main(int argc,char * argv[])
 				}
 
 				ptr = start;
+
+        //normalization
 				while( ptr != NULL)
 				{
 					ptr->weight /= sum;
 					ptr = ptr->Next;
 				}
 
+        //reassign component????
+        //
 				while(temp_ptr != NULL && temp_ptr->Previous != NULL)
 				{
 					if(temp_ptr->weight <= temp_ptr->Previous->weight)
