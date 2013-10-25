@@ -192,9 +192,10 @@ int main(int argc,char * argv[])
 	cv::Mat orig_img, bin_img;
 	//std::vector<std::vector<cv::Point>> contours;
 
-
+  const char * fileName = (const char*)argv[1];
+  printf("Opening file %s for processing\n", fileName);
 	//Declare a VideoCapture object to store incoming frame and initialize it
-	cv::VideoCapture capture("PETS2009_sample_1.avi");
+	cv::VideoCapture capture(fileName);
 	//union{
 	//	int value_1;
 	//	char c[4];
@@ -299,7 +300,7 @@ int main(int argc,char * argv[])
 		if(!capture.read(orig_img)){
 			break;
 			capture.release();
-			capture = cv::VideoCapture("PETS2009_sample_1.avi");
+			capture = cv::VideoCapture(fileName);
 			capture.read(orig_img);
 		}
 			//break;
@@ -314,7 +315,8 @@ int main(int argc,char * argv[])
 		//cv::cvtColor(bin_img, bin_img, CV_RGB2GRAY);
 
 		N_ptr = N_start;
-		duration = static_cast<double>(cv::getTickCount());
+		std::cout << N_ptr << std::endl;
+    duration = static_cast<double>(cv::getTickCount());
 		for( i=0; i<nL; i++)
 		{
 			r_ptr = orig_img.ptr(i);
@@ -330,7 +332,6 @@ int main(int argc,char * argv[])
 				rVal = *(r_ptr++);
 				gVal = *(r_ptr++);
 				bVal = *(r_ptr++);
-
 				start = N_ptr->pixel_s;
 				rear = N_ptr->pixel_r;
 				ptr = start;
@@ -476,6 +477,8 @@ int main(int argc,char * argv[])
 				//else
 					//bin_img.at<uchar>(i,j) = 0;
 				N_ptr = N_ptr->Next;
+        if (!N_ptr)
+          break;
 			}
 		}
 
