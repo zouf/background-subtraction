@@ -216,7 +216,7 @@ int main(int argc,char * argv[])
 	//Recieveing input from the source and converting it to grayscale
 	capture.read(orig_img);
 	//orig_img = cv::imread("BG_abs.jpg");
-	cv::resize(orig_img,orig_img,cv::Size(340,260));
+	//cv::resize(orig_img,orig_img,cv::Size(340,260));
 	cv::cvtColor(orig_img, orig_img, CV_BGR2YCrCb);
 	//cv::GaussianBlur(orig_img, orig_img, cv::Size(3,3), 3.0);
 
