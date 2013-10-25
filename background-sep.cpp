@@ -33,16 +33,16 @@ and on any theory of liability, whether in contract, strict liability,
 or tort (including negligence or otherwise) arising in any way out of
 the use of this software, even if advised of the possibility of such damage.*/
 
-#include <opencv2\core\core.hpp>
-#include <opencv2\imgproc\imgproc.hpp>
-#include <opencv2\highgui\highgui.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
 #include <iostream>
-#include <conio.h>
-#include <opencv2\features2d\features2d.hpp>
-#include <opencv2\Blob_detection.hpp>
+#include <curses.h>
+#include <opencv2/features2d/features2d.hpp>
+//#include <opencv2/Blob_detection.hpp>
 #include <vector>
-//#include <tbb\parallel_for.h>
-//#include <tbb\blocked_range.h>
+//#include <tbb/parallel_for.h>
+//#include <tbb/blocked_range.h>
 
 
 
@@ -62,7 +62,7 @@ int overall = 0;
 
 //Structure used for saving various components for each pixel
 struct gaussian
-{								
+{
 	double mean[3], covariance;
 	double weight;								// Represents the measure to which a particular component defines the pixel value
 	gaussian* Next;
@@ -94,7 +94,7 @@ Node* Create_Node(double info1, double info2, double info3)
 {
 	N_ptr = new Node;
 	if(N_ptr != NULL)
-	{		
+	{
 		N_ptr->Next = NULL;
 		N_ptr->no_of_components = 1;
 		N_ptr->pixel_s = N_ptr->pixel_r = Create_gaussian(info1,info2, info3);
@@ -183,7 +183,7 @@ gaussian* Delete_gaussian(gaussian* nptr)
 	return nptr;
 }
 
-void main()
+int main(int argc,char * argv[])
 {
 	int i,j,k;
 	i=j=k=0;
@@ -191,7 +191,7 @@ void main()
 	// Declare matrices to store original and resultant binary image
 	cv::Mat orig_img, bin_img;
 	//std::vector<std::vector<cv::Point>> contours;
-	
+
 
 	//Declare a VideoCapture object to store incoming frame and initialize it
 	cv::VideoCapture capture("PETS2009_sample_1.avi");
@@ -221,8 +221,8 @@ void main()
 
 	//Initializing the binary image with the same dimensions as original image
 	bin_img = cv::Mat(orig_img.rows, orig_img.cols, CV_8U, cv::Scalar(0));
-	
-	double value[3];
+
+	//double value[3];
 	//cv::SURF gp;
 	//cv::KeyPoint gp1;
 	//std::vector<cv::KeyPoint,std::allocator<cv::KeyPoint>> gp2;
@@ -240,7 +240,7 @@ void main()
 		r_ptr = orig_img.ptr(i);
 		for( j=0; j<orig_img.cols; j++ )
 		{
-			
+
 			N_ptr = Create_Node(*r_ptr,*(r_ptr+1),*(r_ptr+2));
 			if( N_ptr != NULL ){
 				N_ptr->pixel_s->weight = 1.0;
@@ -249,7 +249,9 @@ void main()
 			else
 			{
 				std::cout << "Memory limit reached... ";
-				_getch();
+				//MZ What is this???
+        //TODO
+        //_getch();
 				exit(0);
 			}
 		}
@@ -270,27 +272,30 @@ void main()
 		nL = orig_img.rows;
 		nC = orig_img.cols*orig_img.channels();
 	}
-	
-	double del[3], mal_dist;
+
+	//double del[3]
+  double mal_dist;
 	double sum = 0.0;
-	double sum1 = 0.0;
-	int count = 0;
+	//double sum1 = 0.0;
+	//int count = 0;
 	bool close = false;
 	int background;
 	double mult;
-	double duration,duration1,duration2,duration3;
+	double duration,duration1;
+//  double duration3;
+//  double duration2;
 	double temp_cov = 0.0;
 	double weight = 0.0;
 	double var = 0.0;
 	double muR,muG,muB,dR,dG,dB,rVal,gVal,bVal;
-	
+
 	//Step 2: Modelling each pixel with Gaussian
 	duration1 = static_cast<double>(cv::getTickCount());
 	bin_img = cv::Mat(orig_img.rows,orig_img.cols,CV_8UC1,cv::Scalar(0));
 	while(1)
 	{
-		
-		duration3 = 0.0;
+
+		//duration3 = 0.0;
 		if(!capture.read(orig_img)){
 			break;
 			capture.release();
@@ -299,13 +304,13 @@ void main()
 		}
 			//break;
 		int count = 0;
-		int count1 = 0;
+		//int count1 = 0;
 		//cv::resize(orig_img,orig_img,cv::Size(340,260));
 		//cv::Mat result(bin_img.size(),CV_8U,cv::Scalar(255));
-		
+
 		//cv::cvtColor(orig_img, orig_img, CV_BGR2YCrCb);
 		//cv::GaussianBlur(orig_img, orig_img, cv::Size(3,3), 3.0);
-		
+
 		//cv::cvtColor(bin_img, bin_img, CV_RGB2GRAY);
 
 		N_ptr = N_start;
@@ -317,10 +322,10 @@ void main()
 			for( j=0; j<nC; j+=3)
 			{
 				sum = 0.0;
-				sum1 = 0.0;
+				//sum1 = 0.0;
 				close = false;
 				background = 0;
-				
+
 
 				rVal = *(r_ptr++);
 				gVal = *(r_ptr++);
@@ -340,8 +345,8 @@ void main()
 
 				for( k=0; k<N_ptr->no_of_components; k++ )
 				{
-					
-					
+
+
 					weight = ptr->weight;
 					mult = alpha/weight;
 					weight = weight*alpha_bar + prune;
@@ -359,11 +364,11 @@ void main()
 						del[1] = value[1]-ptr->mean[1];
 						del[2] = value[2]-ptr->mean[2];*/
 
-						
+
 						var = ptr->covariance;
-					
+
 						mal_dist = (dR*dR + dG*dG + dB*dB);
-					
+
 						if((sum < cfbar) && (mal_dist < 16.0*var*var))
 								background = 255;
 
@@ -371,7 +376,7 @@ void main()
 						{
 							weight += alpha;
 							//mult = mult < 20.0*alpha ? mult : 20.0*alpha;
-						
+
 							close = true;
 
 							ptr->mean[0] = muR + mult*dR;
@@ -381,9 +386,9 @@ void main()
 							//temp_cov = ptr->covariance*(1+mult*(mal_dist - 1));
 							temp_cov = var + mult*(mal_dist - var);
 							ptr->covariance = temp_cov<5.0?5.0:(temp_cov>20.0?20.0:temp_cov);
-							temp_ptr = ptr;						
+							temp_ptr = ptr;
 						}
-										
+
 					}
 
 					if(weight < -prune)
@@ -397,13 +402,13 @@ void main()
 					//if(ptr->weight > 0)
 						sum += weight;
 						ptr->weight = weight;
-					}			
+					}
 
 					ptr = ptr->Next;
-				}				
-				
+				}
 
-				
+
+
 				if( close == false )
 				{
 					ptr = new gaussian;
@@ -457,14 +462,14 @@ void main()
 							rear = previous;
 						previous->Previous = temp_ptr;
 					}
-					
+
 					temp_ptr = temp_ptr->Previous;
 				}
 
-				
+
 
 				N_ptr->pixel_s = start;
-				N_ptr->pixel_r = rear;			
+				N_ptr->pixel_r = rear;
 
 				//if(background == 1)
 					*b_ptr++ = background;
@@ -493,7 +498,9 @@ void main()
 	duration1 /= cv::getTickFrequency();
 
 	std::cout << "\n duration1 :" << duration1;
-	
 
-	_getch();
+  //MZ What is this???
+  //TODO
+	//_getch();
+  return 0;
 }
